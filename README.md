@@ -46,15 +46,6 @@ Based on the current dataset (January–June):
 3. Open `index.html` in any web browser.
 4. The dashboard will load automatically.
 
-**Note:** An internet connection is required initially to load Chart.js from its CDN.
-
-## 📷 Dashboard Preview
-
-Add a screenshot of your dashboard here to give visitors a preview of the project.
-
-```markdown
-![Dashboard Preview](screenshot.png)
-```
 
 ## ⚙️ Customization
 
