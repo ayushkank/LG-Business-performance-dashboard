@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>LG Business Performance Dashboard</title>
+<style>
+:root{
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px);
+  padding-bottom:env(safe-area-inset-bottom,0px);
+  color-scheme:light;
+  --bg:#f5f7fb; --surface:#ffffff; --text:#14213d; --muted:#5b6785; --border:#e2e7f1;
+  --blue:#2563eb; --red:#e11d48; --green:#059669; --amber:#d97706; --grid:#e8ecf4;
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    color-scheme:dark;
+    --bg:#0e1424; --surface:#172036; --text:#eef2ff; --muted:#9aa7c7; --border:#26324f;
+    --blue:#60a5fa; --red:#fb7185; --green:#34d399; --amber:#fbbf24; --grid:#26324f;
+  }
+}
+:root[data-theme="dark"]{
+  color-scheme:dark;
+  --bg:#0e1424; --surface:#172036; --text:#eef2ff; --muted:#9aa7c7; --border:#26324f;
+  --blue:#60a5fa; --red:#fb7185; --green:#34d399; --amber:#fbbf24; --grid:#26324f;
+}
+*{box-sizing:border-box}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+html,body{height:100%}
+body{margin:0;background:var(--bg);color:var(--text);font-family:system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;line-height:1.4;display:flex;flex-direction:column;overflow:hidden}
+header{border-bottom:1px solid var(--border);background:var(--surface);flex:none}
+.wrap{max-width:1280px;margin:0 auto;padding:0 24px;width:100%}
+nav{display:flex;align-items:center;justify-content:space-between;height:56px}
+.brand{display:flex;align-items:center;gap:10px;font-weight:800;font-size:20px;letter-spacing:.02em}
+.brand svg{width:32px;height:32px;flex:none}
+.tag{color:var(--muted);font-size:13px}
+button{font:inherit;font-size:12px;background:var(--bg);color:var(--text);border:1px solid var(--border);border-radius:8px;padding:5px 10px;cursor:pointer;margin-left:12px}
+main{flex:1;min-height:0;display:flex;flex-direction:column;padding-top:16px;padding-bottom:16px;gap:14px}
+.title h1{font-size:clamp(20px,2.6vw,28px);line-height:1.15;margin:0;letter-spacing:-.02em}
+.title p{color:var(--muted);margin:2px 0 0;font-size:14px}
+.kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;flex:none}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:14px 16px}
+.kpi small{color:var(--muted);font-size:12px}
+.kpi strong{display:block;font-size:22px;letter-spacing:-.01em;line-height:1.2}
+.kpi em{font-style:normal;font-size:12px;color:var(--green)}
+.grid{flex:1;min-height:0;display:grid;grid-template-columns:1.5fr 1fr;grid-template-rows:1fr 1fr;gap:12px}
+.grid .tall{grid-row:1/3}
+.grid .card{display:flex;flex-direction:column;min-height:0}
+.card h2{margin:0;font-size:15px}
+.card p{margin:0 0 6px;color:var(--muted);font-size:12px}
+.chart-box{position:relative;flex:1;min-height:0}
+@media(max-width:820px){
+  body{overflow:auto;display:block}
+  main{display:block}
+  .title{margin-bottom:12px}
+  .kpis{grid-template-columns:repeat(2,1fr);margin-bottom:12px}
+  .grid{display:block}
+  .grid .card{margin-bottom:12px}
+  .chart-box{height:260px;flex:none}
+  .tag{display:none}
+}
+</style>
+</head>
+<body>
+<header>
+  <div class="wrap">
+    <nav>
+      <div class="brand"><svg viewBox="0 0 32 32" aria-hidden="true"><circle cx="16" cy="16" r="16" fill="var(--red)"/><text x="16" y="20.5" text-anchor="middle" font-family="system-ui,Arial,sans-serif" font-size="12" font-weight="800" fill="#fff">LG</text></svg>LG</div>
+      <div><span class="tag">January – June · INR</span><button id="themeBtn" type="button" aria-label="Toggle theme">Theme</button></div>
+    </nav>
+  </div>
+</header>
+
+<main class="wrap">
+  <div class="title">
+    <h1>LG Business Performance Dashboard</h1>
+    <p>Revenue, expenses and profit over six months, plus how June’s revenue was allocated.</p>
+  </div>
+
+  <section class="kpis" id="kpis"></section>
+
+  <section class="grid">
+    <div class="card tall">
+      <h2>Revenue, Expenses &amp; Profit</h2>
+      <p>Monthly trend</p>
+      <div class="chart-box"><canvas id="myChart1"></canvas></div>
+    </div>
+    <div class="card">
+      <h2>Monthly Revenue</h2>
+      <p>Revenue by month</p>
+      <div class="chart-box"><canvas id="myChart2"></canvas></div>
+    </div>
+    <div class="card">
+      <h2>June Revenue Distribution</h2>
+      <p>Allocation of June revenue</p>
+      <div class="chart-box"><canvas id="myChart3"></canvas></div>
+    </div>
+  </section>
+</main>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<script>
+const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'];
+const revenue = [50000, 60000, 55000, 70000, 75000, 80000];
+const expenses = [30000, 35000, 32000, 40000, 42000, 45000];
+const profit = [20000, 25000, 23000, 30000, 33000, 35000];
+
+const sum = a => a.reduce((x, y) => x + y, 0);
+const fmt = n => '₹' + n.toLocaleString('en-IN');
+
+// KPI cards
+const growth = Math.round((revenue[5] / revenue[0] - 1) * 100);
+const margin = Math.round(sum(profit) / sum(revenue) * 100);
+document.getElementById('kpis').innerHTML = [
+  ['Total revenue', fmt(sum(revenue)), '+' + growth + '% Jan → Jun'],
+  ['Total expenses', fmt(sum(expenses)), ''],
+  ['Total profit', fmt(sum(profit)), margin + '% margin'],
+  ['Best month', 'Jun', fmt(revenue[5]) + ' revenue']
+].map(k => `<div class="card kpi"><small>${k[0]}</small><strong>${k[1]}</strong><em>${k[2]}</em></div>`).join('');
+
+const css = v => getComputedStyle(document.documentElement).getPropertyValue(v).trim();
+const charts = [];
+
+function build() {
+  charts.forEach(c => c.destroy());
+  charts.length = 0;
+  const blue = css('--blue'), red = css('--red'), green = css('--green'), amber = css('--amber');
+  const text = css('--muted'), grid = css('--grid');
+  Chart.defaults.color = text;
+  Chart.defaults.font.family = 'system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif';
+  const scales = {
+    x: { grid: { display: false } },
+    y: { grid: { color: grid }, ticks: { callback: v => '₹' + v / 1000 + 'k' } }
+  };
+  const tip = { callbacks: { label: c => ' ' + c.dataset.label + ': ' + fmt(c.parsed.y) } };
+
+  // Chart 1: line
+  charts.push(new Chart(document.getElementById('myChart1'), {
+    type: 'line',
+    data: {
+      labels: months,
+      datasets: [
+        { label: 'Revenue', data: revenue, borderColor: blue, backgroundColor: blue, tension: .3, fill: false },
+        { label: 'Expenses', data: expenses, borderColor: red, backgroundColor: red, tension: .3, fill: false },
+        { label: 'Profit', data: profit, borderColor: green, backgroundColor: green, tension: .3, fill: false }
+      ]
+    },
+    options: { responsive: true, maintainAspectRatio: false, interaction: { mode: 'index', intersect: false },
+      scales, plugins: { legend: { position: 'bottom' }, tooltip: tip } }
+  }));
+
+  // Chart 2: bar (revenue only)
+  charts.push(new Chart(document.getElementById('myChart2'), {
+    type: 'bar',
+    data: { labels: months, datasets: [{ label: 'Revenue', data: revenue, backgroundColor: blue, borderRadius: 6 }] },
+    options: { responsive: true, maintainAspectRatio: false, scales,
+      plugins: { legend: { display: false }, tooltip: tip } }
+  }));
+
+  // Chart 3: pie (June revenue distribution)
+  charts.push(new Chart(document.getElementById('myChart3'), {
+    type: 'pie',
+    data: {
+      labels: ['Reinvestment 40%', 'Salary 35%', 'Miscellaneous 25%'],
+      datasets: [{ data: [40, 35, 25], backgroundColor: [blue, red, green], borderColor: css('--surface'), borderWidth: 2 }]
+    },
+    options: { responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { position: 'right' },
+        tooltip: { callbacks: { label: c => ' ' + c.label + ' · ' + fmt(revenue[5] * c.parsed / 100) } } } }
+  }));
+}
+
+build();
+
+// Theme toggle
+const root = document.documentElement;
+document.getElementById('themeBtn').addEventListener('click', () => {
+  const dark = css('color-scheme') === 'dark' || root.dataset.theme === 'dark';
+  root.dataset.theme = dark ? 'light' : 'dark';
+  build();
+});
+matchMedia('(prefers-color-scheme: dark)').addEventListener('change', build);
+</script>
+</body>
+</html>
