@@ -37,13 +37,6 @@ Based on the current dataset (January–June):
 | Profit Margin | 43% |
 | Best Performing Month | June |
 
-## 📂 Project Structure
-
-```text
-LG-Business-Dashboard/
-│
-├── index.html
-└── favicon.ico (optional)
 ```
 
 ## 🚀 How to Run
